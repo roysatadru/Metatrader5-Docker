@@ -8,54 +8,55 @@
 //+------------------------------------------------------------------+
 void GetPositions(CJAVal &dataObject)
 {
-   CPositionInfo myposition;
-   CJAVal data;
-   
-   // Get positions
-   int positionsTotal=PositionsTotal();
-   
-   // Create empty array if no positions
-   if(!positionsTotal)
-   {
-      CJAVal emptyPosition;
-      data["positions"].Add(emptyPosition);
-   }
+  CPositionInfo myposition;
+  CJAVal data;
+  
+  // Get positions
+  int positionsTotal=PositionsTotal();
+  
+  // Create empty array if no positions
+  if(!positionsTotal)
+  {
+    CJAVal emptyPosition;
+    data["positions"].Add(emptyPosition);
+  }
+    
+  // Go through positions in a loop
+  for(int i=0; i<positionsTotal; i++)
+  {
+    mControl.mResetLastError();
+    
+    // Get the position ticket directly by index
+    ulong ticket = PositionGetTicket(i);
+    
+    if(ticket && myposition.SelectByTicket(ticket))
+    {
+      // Create a new position object for each position
+      CJAVal position;
       
-   // Go through positions in a loop
-   for(int i=0; i<positionsTotal; i++)
-   {
-      mControl.mResetLastError();
-      
-      // Get the position ticket directly by index
-      ulong ticket = PositionGetTicket(i);
-      
-      if(ticket && myposition.SelectByTicket(ticket))
-      {
-         // Create a new position object for each position
-         CJAVal position;
-         
-         position["id"]=PositionGetInteger(POSITION_IDENTIFIER);
-         position["magic"]=PositionGetInteger(POSITION_MAGIC);
-         position["symbol"]=PositionGetString(POSITION_SYMBOL);
-         position["type"]=EnumToString(ENUM_POSITION_TYPE(PositionGetInteger(POSITION_TYPE)));
-         position["time_setup"]=PositionGetInteger(POSITION_TIME);
-         position["open"]=PositionGetDouble(POSITION_PRICE_OPEN);
-         position["stoploss"]=PositionGetDouble(POSITION_SL);
-         position["takeprofit"]=PositionGetDouble(POSITION_TP);
-         position["volume"]=PositionGetDouble(POSITION_VOLUME);
-         position["comment"]=PositionGetString(POSITION_COMMENT);
+      position["id"]=PositionGetInteger(POSITION_TICKET);
+      position["identifier"]=PositionGetInteger(POSITION_IDENTIFIER);
+      position["magic"]=PositionGetInteger(POSITION_MAGIC);
+      position["symbol"]=PositionGetString(POSITION_SYMBOL);
+      position["type"]=EnumToString(ENUM_POSITION_TYPE(PositionGetInteger(POSITION_TYPE)));
+      position["time_setup"]=PositionGetInteger(POSITION_TIME);
+      position["open"]=PositionGetDouble(POSITION_PRICE_OPEN);
+      position["stoploss"]=PositionGetDouble(POSITION_SL);
+      position["takeprofit"]=PositionGetDouble(POSITION_TP);
+      position["volume"]=PositionGetDouble(POSITION_VOLUME);
+      position["comment"]=PositionGetString(POSITION_COMMENT);
 
-         data["positions"].Add(position);
-      }
-      CheckError(__FUNCTION__);
-   }
-   
-   data["error"]=(bool) false;
-   
-   string t=data.Serialize();
-   if(debug)
-      Print(t);
-   InformClientSocket(sysSocket,t);
+      data["positions"].Add(position);
+    }
+    CheckError(__FUNCTION__);
+  }
+  
+  data["error"]=(bool) false;
+  
+  string t=data.Serialize();
+  if(debug)
+    Print(t);
+  InformClientSocket(sysSocket,t);
 }
 
 //+------------------------------------------------------------------+
