@@ -43,6 +43,7 @@ void GetPositions(CJAVal &dataObject)
          position["stoploss"]=PositionGetDouble(POSITION_SL);
          position["takeprofit"]=PositionGetDouble(POSITION_TP);
          position["volume"]=PositionGetDouble(POSITION_VOLUME);
+         position["comment"]=PositionGetString(POSITION_COMMENT);
 
          data["positions"].Add(position);
       }
@@ -91,6 +92,7 @@ void GetOrders(CJAVal &dataObject)
             order["stoploss"]=OrderGetDouble(ORDER_SL);
             order["takeprofit"]=OrderGetDouble(ORDER_TP);
             order["volume"]=OrderGetDouble(ORDER_VOLUME_INITIAL);
+            order["comment"]=OrderGetString(ORDER_COMMENT);
 
             data["error"]=(bool) false;
             data["orders"].Add(order);
