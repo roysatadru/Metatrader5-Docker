@@ -33,6 +33,7 @@ Socket sysSocket(context, ZMQ_REP);
 #include <ejtraderMT/Calendar.mqh>
 #include <ejtraderMT/SymbolsInfo.mqh>
 #include <ejtraderMT/OrdersInfo.mqh>
+#include <ejtraderMT/PositionsInfo.mqh>
 
 // Global variables \\
 input bool debug = false;
@@ -331,6 +332,8 @@ void RequestHandler(ZmqMsg &request)
       HistoryInfo(incomingMessage);
    else if (action == "TRADE")
       TradingModule(incomingMessage);
+   else if (action == "CHECKPOSITIONCLOSED")
+      CheckPositionClosed(incomingMessage);
    else if (action == "POSITIONS")
       GetPositions(incomingMessage);
    else if (action == "ORDERCALCMARGIN")
@@ -961,6 +964,32 @@ string getUninitReasonText(int reasonCode)
    }
    //---
    return text;
+}
+
+//+------------------------------------------------------------------+
+//| Check if a position is closed by its position identifier          |
+//+------------------------------------------------------------------+
+bool IsPositionClosed(ulong position_id)
+{
+   if(HistorySelectByPosition(position_id))
+   {
+      for(int i = 0; i < HistoryDealsTotal(); i++)
+      {
+         ulong dealTicket = HistoryDealGetTicket(i);
+         if(dealTicket > 0)
+         {
+            if(HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID) == position_id)
+            {
+               // Check if deal entry is an exit (closing) deal
+               if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(dealTicket, DEAL_ENTRY) == DEAL_ENTRY_OUT)
+               {
+                  return true; // Position is closed
+               }
+            }
+         }
+      }
+   }
+   return false; // No closing deal found
 }
 //+------------------------------------------------------------------+
 
