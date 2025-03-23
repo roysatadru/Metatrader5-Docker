@@ -336,6 +336,8 @@ void RequestHandler(ZmqMsg &request)
       CheckPositionClosed(incomingMessage);
    else if (action == "POSITIONS")
       GetPositions(incomingMessage);
+   else if (action == "CHECKORDERSTATUS")
+      CheckOrderStatus(incomingMessage);
    else if (action == "ORDERCALCMARGIN")
       OrderCalcMarginAction(incomingMessage);
    else if (action == "ORDERS")
@@ -964,32 +966,6 @@ string getUninitReasonText(int reasonCode)
    }
    //---
    return text;
-}
-
-//+------------------------------------------------------------------+
-//| Check if a position is closed by its position identifier          |
-//+------------------------------------------------------------------+
-bool IsPositionClosed(ulong position_id)
-{
-   if(HistorySelectByPosition(position_id))
-   {
-      for(int i = 0; i < HistoryDealsTotal(); i++)
-      {
-         ulong dealTicket = HistoryDealGetTicket(i);
-         if(dealTicket > 0)
-         {
-            if(HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID) == position_id)
-            {
-               // Check if deal entry is an exit (closing) deal
-               if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(dealTicket, DEAL_ENTRY) == DEAL_ENTRY_OUT)
-               {
-                  return true; // Position is closed
-               }
-            }
-         }
-      }
-   }
-   return false; // No closing deal found
 }
 //+------------------------------------------------------------------+
 

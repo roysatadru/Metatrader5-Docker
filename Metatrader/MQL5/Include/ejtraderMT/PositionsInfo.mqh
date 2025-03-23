@@ -18,27 +18,36 @@ void CheckPositionClosed(CJAVal &dataObject)
     }
     else
     {
-        bool is_closed = IsPositionClosed(position_id);
-        response["error"] = false;
-        response["position_id"] = (int)position_id;
-        response["is_closed"] = is_closed;
-        
-        // Optional: Get additional information about closing deal if closed
-        if(is_closed && HistorySelectByPosition(position_id))
+        // Try to select position history
+        if(!HistorySelectByPosition(position_id))
         {
-            for(int i = 0; i < HistoryDealsTotal(); i++)
+            response["error"] = true;
+            response["description"] = "Failed to select position history";
+            response["position_id"] = (int)position_id;
+        }
+        else
+        {
+            bool is_closed = false;
+            int total_deals = HistoryDealsTotal();
+            
+            // Loop through deals related to this position
+            for(int i = 0; i < total_deals; i++)
             {
                 ulong dealTicket = HistoryDealGetTicket(i);
+                
+                // Check if the deal belongs to our position and is a closing deal
                 if(dealTicket > 0 && 
-                HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID) == position_id &&
-                (ENUM_DEAL_ENTRY)HistoryDealGetInteger(dealTicket, DEAL_ENTRY) == DEAL_ENTRY_OUT)
+                   HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID) == position_id && 
+                   (ENUM_DEAL_ENTRY)HistoryDealGetInteger(dealTicket, DEAL_ENTRY) == DEAL_ENTRY_OUT)
                 {
-                response["close_price"] = HistoryDealGetDouble(dealTicket, DEAL_PRICE);
-                response["close_time"] = TimeToString((datetime)HistoryDealGetInteger(dealTicket, DEAL_TIME));
-                response["close_profit"] = HistoryDealGetDouble(dealTicket, DEAL_PROFIT);
-                break;
+                    is_closed = true;
+                    break; // Position is closed, no need to check further deals
                 }
             }
+            
+            response["error"] = false;
+            response["position_id"] = (int)position_id;
+            response["is_closed"] = is_closed;
         }
     }
     
@@ -47,3 +56,4 @@ void CheckPositionClosed(CJAVal &dataObject)
         Print(t);
     InformClientSocket(sysSocket, t);
 }
+
