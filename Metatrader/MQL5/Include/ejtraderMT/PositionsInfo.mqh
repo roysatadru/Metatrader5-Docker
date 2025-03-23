@@ -9,7 +9,7 @@ void CheckPositionClosed(CJAVal &dataObject)
     CJAVal response;
     
     // Extract position ID from request
-    ulong position_id = (ulong)dataObject["position_id"].ToInt();
+    ulong position_id = (ulong)dataObject["id"].ToInt();
     
     if(position_id <= 0)
     {
