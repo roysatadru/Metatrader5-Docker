@@ -33,6 +33,7 @@ Socket sysSocket(context, ZMQ_REP);
 #include <ejtraderMT/Calendar.mqh>
 #include <ejtraderMT/SymbolsInfo.mqh>
 #include <ejtraderMT/OrdersInfo.mqh>
+#include <ejtraderMT/PositionsInfo.mqh>
 
 // Global variables \\
 input bool debug = false;
@@ -331,8 +332,12 @@ void RequestHandler(ZmqMsg &request)
       HistoryInfo(incomingMessage);
    else if (action == "TRADE")
       TradingModule(incomingMessage);
+   else if (action == "CHECKPOSITIONCLOSED")
+      CheckPositionClosed(incomingMessage);
    else if (action == "POSITIONS")
       GetPositions(incomingMessage);
+   else if (action == "CHECKORDERSTATUS")
+      CheckOrderStatus(incomingMessage);
    else if (action == "ORDERCALCMARGIN")
       OrderCalcMarginAction(incomingMessage);
    else if (action == "ORDERS")

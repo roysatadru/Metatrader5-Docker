@@ -38,3 +38,71 @@ void OrderCalcMarginAction(CJAVal &dataObject)
       Print(t);
    InformClientSocket(sysSocket, t);
 }
+
+//+------------------------------------------------------------------+
+//| Check if an order has been converted to a position               |
+//+------------------------------------------------------------------+
+void CheckOrderStatus(CJAVal &dataObject)
+{
+   // Extract the order ticket from the dataObject
+   ulong orderTicket = (ulong)dataObject["id"].ToInt();
+   
+   CJAVal result;
+   result["orderTicket"] = (string)orderTicket;
+   
+   // Initialize position ID
+   ulong positionId = 0;
+   bool orderFound = false;
+   
+   if (OrderSelect(orderTicket))
+   {
+      orderFound = true;
+      // Order is active, get its state
+      ENUM_ORDER_STATE orderState = (ENUM_ORDER_STATE)OrderGetInteger(ORDER_STATE);
+      
+      // In MQL5, an active order won't have a position ID yet
+      result["isActive"] = true;
+      result["hasPosition"] = false;
+   }
+   
+   // If not found in active orders, check history
+   if (!orderFound)
+   {
+      // Try to directly select the order by ticket
+      if (HistoryOrderSelect(orderTicket))
+      {
+         orderFound = true;
+         // Order found in history
+         ENUM_ORDER_STATE orderState = (ENUM_ORDER_STATE)HistoryOrderGetInteger(orderTicket, ORDER_STATE);
+         
+         // If the order was filled, get the position ID
+         if (orderState == ORDER_STATE_FILLED)
+         {
+            positionId = HistoryOrderGetInteger(orderTicket, ORDER_POSITION_ID);
+            result["isActive"] = false;
+            result["hasPosition"] = true;
+            result["positionId"] = (string)positionId;
+         }
+         else
+         {
+            // Order was canceled, expired, or rejected
+            result["isActive"] = false;
+            result["hasPosition"] = false;
+         }
+      }
+   }
+   
+   // If order not found anywhere
+   if (!orderFound)
+   {
+      result["isActive"] = false;
+      result["hasPosition"] = false;
+      result["error"] = "Order not found";
+   }
+   
+   // Send the result via ZMQ
+   string t = result.Serialize();
+   if (debug)
+      Print(t);
+   InformClientSocket(sysSocket, t);
+}
